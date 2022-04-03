@@ -1,0 +1,26 @@
+/*
+* {
+    border-style: solid;
+}
+*/
+.color_block{
+    background-color: white;
+    height: 100;
+    width: 100;
+    display: inline-block;
+    border-style: solid;
+    border-color: white;
+}
+#picker {
+    border-style:double;
+    padding:10;
+    margin: 10;
+}
+.selected {
+    border-style: solid;
+    border-color: black;
+}
+.myblock {
+    display: inline-block;
+    text-align:center;
+}

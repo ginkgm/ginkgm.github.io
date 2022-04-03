@@ -1,58 +1,123 @@
 <html>
     <head>
         <title>Color Mixer</title>
-        <style type="text/css">
-            .color_block{
-                background-color: grey;
-                height: 100;
-                width: 100;
-                display: inline-block;
-            }
-        </style>
+        <link rel="stylesheet" type="text/css" href="color.css">
     </head>
     <body>
-        Input1:<input type="text" id="input1" size=6 value="FFFFFF" oninput="redraw (event)" onpropertychange="redraw (event)">
-        Input2:<input type="text" id="input2" size=6 value="FFFFFF" oninput="redraw (event)" onpropertychange="redraw (event)">
-        Output:<input type="text" name="output" size=6 value="FFFFFF" oninput="redraw (event)" onpropertychange="redraw (event)">
-        <div id="input1_block" class="color_block"></div>
-        <span>+</span>
-        <div id="input2_block" class="color_block"></div>
-        <span>=</span>
-        <div id="output_block" class="color_block"></div>
+        <canvas id="picker" height=300 width=600
+                onmousemove="div_move()"
+                onmousedown="div_down()"
+                onmouseup="div_up()"></canvas>
+        <div>
+            <div class="myblock">
+                <div id="input1_block" class="color_block" onclick="click_block1()"></div>
+                <p id="input1_val">FFFFFF</p>
+            </div>
+            <span>+</span>
+            <div class="myblock">
+                <div id="input2_block" class="color_block" onclick="click_block2()"></div>
+                <p id="input2_val">FFFFFF</p>
+            </div>
+            <span>=</span>
+            <div class="myblock">
+                <div id="output_block" class="color_block"></div>
+                <p id="output_val">FFFFFF</p>
+            </div>
+        </div>
     </body>
+    <script src="display.js"></script>
     <script>
-        function add(input1, input2) {
-            var r1 = parseInt(input1.substr(0, 2), 16)
-            var g1 = parseInt(input1.substr(2, 2), 16)
-            var b1 = parseInt(input1.substr(4, 2), 16)
+        var canvas_element = document.getElementById("picker");
+        const canvas_width = canvas_element.width;
+        const canvas_height = canvas_element.height;
+        var canvas_context = canvas_element.getContext("2d");
 
-            var r2 = parseInt(input2.substr(0, 2), 16)
-            var g2 = parseInt(input2.substr(2, 2), 16)
-            var b2 = parseInt(input2.substr(4, 2), 16)
+        var g_picker_img = canvas_context.createImageData(canvas_width, canvas_height);
+        var g_picking = 0;
+        var g_input1_color = [255, 255, 255];
+        var g_input2_color = [255, 255, 255];
+        var g_input1_pos = [0, 0];
+        var g_input2_pos = [0, 0];
 
-            var r = r1 + r2
-            var g = g1 + g2
-            var b = b1 + b2
+        var g_selected_block = 0;
+        document.getElementById("input1_block").classList.add("selected");
 
-            return (r<<16 | g<< 8 | b).toString(16);
-        }
-        function redraw(event) {
-            var input1 = document.getElementById("input1").value;
-            var input2 = document.getElementById("input2").value;
+        prepare_bg();
+        redraw(null);
 
+        function click_block1() {
             var input1_block = document.getElementById("input1_block");
             var input2_block = document.getElementById("input2_block");
-            var output_block = document.getElementById("output_block");
 
-            input1_block.style.backgroundColor = "#" + input1
-            input2_block.style.backgroundColor = "#" + input2
-
-            ret = add(input1, input2)
-
-            output_block.style.backgroundColor = "#" + ret
-
-            console.log(input1 + ' + ' + input2 + ' = ' + ret)
+            g_selected_block = 0;
+            input1_block.classList.add("selected");
+            input2_block.classList.remove("selected");
         }
 
+        function click_block2() {
+            var input1_block = document.getElementById("input1_block");
+            var input2_block = document.getElementById("input2_block");
+
+            g_selected_block = 1;
+            input2_block.classList.add("selected");
+            input1_block.classList.remove("selected");
+        }
+
+        function div_down() {
+            g_picking = true;
+        }
+        function div_up() {
+            update_pos();
+            g_picking = false;
+        }
+        function div_move() {
+            if (g_picking) {
+                update_pos();
+            }
+        }
+        function update_pos() {
+            div = document.getElementById("picker")
+            var pos = get_mouse_pos(div)
+            picker_on_click(pos);
+            redraw(pos);
+
+            pixel = get_pixel(pos[0], pos[1])
+
+            if (pixel) {
+                var input_block;
+                var input_val;
+                if (g_selected_block == 0) {
+                    input_block = document.getElementById("input1_block");
+                    input_val = document.getElementById("input1_val")
+                    g_input1_color = pixel;
+                    g_input1_pos = pos;
+                } else {
+                    input_block = document.getElementById("input2_block");
+                    input_val = document.getElementById("input2_val")
+                    g_input2_color = pixel;
+                    g_input2_pos = pos;
+                }
+                color_hex = rgb_to_hex(pixel[0], pixel[1], pixel[2])
+                input_block.style.backgroundColor = "#" + color_hex
+                input_val.innerText = color_hex
+
+                var mixed_pixel = mix_color(g_input1_color, g_input2_color);
+
+                var output_block = document.getElementById("output_block");
+                var output_val = document.getElementById("output_val");
+                color_hex = rgb_to_hex(mixed_pixel[0], mixed_pixel[1], mixed_pixel[2]);
+                output_block.style.backgroundColor = "#" + color_hex;
+                output_val.innerText = color_hex
+            }
+        }
+        function get_mouse_pos(object) {
+            var e = event || window.event;
+            var scrollX = document.documentElement.scrollLeft || document.body.scrollLeft;
+            var scrollY = document.documentElement.scrollTop || document.body.scrollTop;
+            var x = event.offsetX || (e.pageX || e.clientX + scrollX) - object.offsetLeft;
+            var y = event.offsetY || (e.pageY || e.clientY + scrollY) - object.offsetTop;
+
+            return [x, y];
+        }
     </script>
 </html>
