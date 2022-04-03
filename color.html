@@ -1,8 +1,58 @@
 <html>
     <head>
         <title>Color Mixer</title>
+        <style type="text/css">
+            .color_block{
+                background-color: grey;
+                height: 100;
+                width: 100;
+                display: inline-block;
+            }
+        </style>
     </head>
     <body>
-        <p>Hello world!</p>
+        Input1:<input type="text" id="input1" size=6 value="FFFFFF" oninput="redraw (event)" onpropertychange="redraw (event)">
+        Input2:<input type="text" id="input2" size=6 value="FFFFFF" oninput="redraw (event)" onpropertychange="redraw (event)">
+        Output:<input type="text" name="output" size=6 value="FFFFFF" oninput="redraw (event)" onpropertychange="redraw (event)">
+        <div id="input1_block" class="color_block"></div>
+        <span>+</span>
+        <div id="input2_block" class="color_block"></div>
+        <span>=</span>
+        <div id="output_block" class="color_block"></div>
     </body>
+    <script>
+        function add(input1, input2) {
+            var r1 = parseInt(input1.substr(0, 2), 16)
+            var g1 = parseInt(input1.substr(2, 2), 16)
+            var b1 = parseInt(input1.substr(4, 2), 16)
+
+            var r2 = parseInt(input2.substr(0, 2), 16)
+            var g2 = parseInt(input2.substr(2, 2), 16)
+            var b2 = parseInt(input2.substr(4, 2), 16)
+
+            var r = r1 + r2
+            var g = g1 + g2
+            var b = b1 + b2
+
+            return (r<<16 | g<< 8 | b).toString(16);
+        }
+        function redraw(event) {
+            var input1 = document.getElementById("input1").value;
+            var input2 = document.getElementById("input2").value;
+
+            var input1_block = document.getElementById("input1_block");
+            var input2_block = document.getElementById("input2_block");
+            var output_block = document.getElementById("output_block");
+
+            input1_block.style.backgroundColor = "#" + input1
+            input2_block.style.backgroundColor = "#" + input2
+
+            ret = add(input1, input2)
+
+            output_block.style.backgroundColor = "#" + ret
+
+            console.log(input1 + ' + ' + input2 + ' = ' + ret)
+        }
+
+    </script>
 </html>
